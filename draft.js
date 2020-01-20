@@ -1,8 +1,12 @@
 const puppeteer = require('puppeteer');
+const path = require('path');
+const config = require('./src/config');
 
 async function run() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch(config.dev);
     const page = await browser.newPage();
+
+    page.setDefaultTimeout(0);
 
     await page.goto('https://professor.uffs.edu.br/');
     await page.screenshot({ path: './professor.png'});
@@ -31,8 +35,13 @@ async function run() {
     console.log(links);
 */
     //await page.goto('http://dev.local.com/uffs-sga-scraping-p/tests/data/logado/percentual-integralizacao/Portal%20Professor.html');
-    await page.goto('https://professor.uffs.edu.br/restrito/graduacao/coordenador/percentual-integralizacao.xhtml');
-    await page.waitForSelector('a[title="Sair"]');
+    const page2 = await browser.newPage();
+    page2.setDefaultTimeout(0);
+    
+    await page2.goto('https://professor.uffs.edu.br/restrito/graduacao/coordenador/percentual-integralizacao.xhtml');
+    await page2.waitForSelector('a[title="Sair"]');
+
+    await page2._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
 /*
     const links = await page.evaluate(() => {
         const imgBuscar = document.querySelectorAll('a.ui-commandlink > img[title="Buscar"]');
@@ -48,26 +57,33 @@ async function run() {
     await page.waitFor(3000);
 */
 
-    const [button] = await page.$x("//a[img[contains(@title, 'Buscar')]]");
+    const [button] = await page2.$x("//a[img[contains(@title, 'Buscar')]]");
     
     if (button) {
         console.log('Click!');
-        await button.click();
-        await page.waitForNavigation();
+        Promise.all([
+            await button.click(),
+            await page2.waitForNavigation({ waitUntil: 'domcontentloaded' })
+        ]);
     }
 
-    await page.waitForSelector('a.ui-commandlink > img[title="Gerar Planilha Eletrônica"]');
+    console.log('esperando botao');
+    await page2.waitForSelector("a.ui-commandlink > img");
+    console.log('antes botao');
 
-    const [botaoGerarPlanilha] = await page.$x("//a[img[contains(@title, 'Gerar Planilha Eletrônica')]]");
+    await page.waitFor(2000);
+
+    const [botaoGerarPlanilha] = await page2.$x("//a[img[contains(@title, 'Gerar')]]");
     
     if (botaoGerarPlanilha) {
         console.log('Botao planilha!');
-        await botaoGerarPlanilha.click();
-        await page.waitForNavigation();
+        //Promise.all([
+            await botaoGerarPlanilha.click();
+            //await page2.waitForNavigation()
+        //]);
     }
 
-    //await page.waitFor(5000);
-    await page.screenshot({ path: './professor3.png'});
+    await page.waitFor(5000);
 
     browser.close();
 }
