@@ -1,3 +1,8 @@
+# Projeto
+data/downloads/*
+!data/downloads/.gitkeep
+
+# General things
 .idea
 
 # Intermediary/compiled files
