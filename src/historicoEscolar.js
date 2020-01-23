@@ -9,6 +9,12 @@ async function acessaPagina(sga) {
     return page;
 }
 
+async function extraiHistoricoDaPagina(page) {
+    // TODO: usar querySelectorAll('div.ui-tabs-panel table[role="grid"]').forEach(function(el) { console.log(el.rows); });
+    await page.$eval('div.ui-tabs-panel div[role="tabpanel"]', (el, value) => el.value = value);
+    await page.waitFor(15000);
+}
+
 async function escolheBuscaPorMatricula(page) {
     const [label] = await page.$x("//label[contains(., 'Matrícula')]");
     
@@ -50,6 +56,8 @@ async function escolheBuscaPorMatricula(page) {
 
     console.log('esperando dados');
     await page.waitForSelector("a.ui-commandlink > img[title='Histórico Escolar']");
+
+    await extraiHistoricoDaPagina(data);
 
     // TODO: pegar pasta de downloads do config
     await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
