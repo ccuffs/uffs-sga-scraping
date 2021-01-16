@@ -10,12 +10,123 @@ async function acessaPagina(sga) {
 }
 
 async function extraiHistoricoDaPagina(page) {
-    // TODO: usar querySelectorAll('div.ui-tabs-panel table[role="grid"]').forEach(function(el) { console.log(el.rows); });
-    await page.$eval('div.ui-tabs-panel div[role="tabpanel"]', (el, value) => el.value = value);
-    await page.waitFor(15000);
+    const tabs = await page.evaluate(() => {
+        var tabs = [];
+        var tabNames = [];
+
+        // Coleta o nome das tabs
+        document.querySelectorAll('ul[role="tablist"] li').forEach(function(el, idx) {
+            tabNames.push(el.innerText);
+        });
+
+        // Itera em cada uma das abas
+        document.querySelectorAll('div.ui-tabs-panel[role="tabpanel"]').forEach(function(el, tabIdx) {
+            var columnNames = [];
+            var tab = {
+                name: tabNames[tabIdx],
+                rows: []
+            };
+
+            // Obtem a tabela de conteudo dentro da tab
+            el.querySelectorAll('table[role="grid"]').forEach(function(table) {
+                console.log('header');
+
+                // Coleta o nome das colunas da tabela
+                table.querySelectorAll('th span').forEach(function(headerCell, idx) {
+                    console.log(headerCell.innerText);                
+                    columnNames.push(headerCell.innerText);
+                });
+
+                console.log('rows');
+
+                // Itera em cada uma das linhas da tabela na tab corrente
+                table.querySelectorAll('tr[role="row"]').forEach(function(row, idx) {
+                    var entry = {};
+                    var cells = row.getElementsByTagName('td');
+
+                    if(cells.length == 0) {
+                        return;
+                    }
+
+                    for(var i = 0; i < cells.length; i++) {
+                        var columnName = columnNames[i];
+                        var columValue = cells[i].innerText;
+
+                        entry[columnName] = columValue;
+                    }
+
+                    tab.rows.push(entry);
+                }); 
+            }); 
+
+            tabs.push(tab);
+        });
+
+        return tabs;
+    });
+
+    console.log('colhendo dados');
+    console.log(tabs);
+
+    return tabs;
 }
 
-async function escolheBuscaPorMatricula(page) {
+async function obtemInfosTextuaisHistorico(page) {
+    return await page.evaluate(() => {
+        var blocos = [];
+
+        document.querySelectorAll('form#corpo fieldset').forEach(function(bloco) {
+            var name = bloco.getElementsByTagName('legend')[0].innerText;
+            var infos = {
+                name: name,
+                values: []
+            };
+
+            console.log(name);            
+
+            bloco.querySelectorAll('td').forEach(function(info) {
+                if(!info.innerText) {
+                    return;
+                }
+                infos.values.push(info.innerText);
+            });
+
+            blocos.push(infos);
+        });
+
+        console.log(blocos);
+
+        return blocos;
+    });
+}
+
+async function baixaHistoricoConclusao(page) {
+    // TODO: pegar pasta de downloads do config
+    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
+
+    const [botaoBaixarHistoricoConclusao] = await page.$x("//a[img[contains(@title, 'Histórico Escolar de Conclusão')]]");
+    
+    if (botaoBaixarHistoricoConclusao) {
+        console.log('Botao botaoBaixarHistoricoConclusao!');
+        await botaoBaixarHistoricoConclusao.click()
+    }
+
+    // TODO: aguardar pelo arquivo ter sido baixado
+    await page.waitFor(5000);
+
+    const [botaoBaixarHistorico] = await page.$x("//a[img[contains(@title, 'Histórico Escolar')]]");
+    
+    if (botaoBaixarHistorico) {
+        console.log('Botao botaoBaixarHistorico!');
+        await botaoBaixarHistorico.click()
+    }
+
+    // TODO: aguardar pelo arquivo ter sido baixado
+    await page.waitFor(15000);
+
+}
+
+async function escolheBuscaPorMatricula(page, matricula) {
     const [label] = await page.$x("//label[contains(., 'Matrícula')]");
     
     if (label) {
@@ -29,7 +140,6 @@ async function escolheBuscaPorMatricula(page) {
     await page.waitForSelector("input[alt='Matrícula']");
     console.log('antes botao');
     
-    const matricula = '';  
     await page.$eval("input[alt='Matrícula']", (el, value) => el.value = value, matricula);
 
     console.log('esperando botao');
@@ -57,40 +167,24 @@ async function escolheBuscaPorMatricula(page) {
     console.log('esperando dados');
     await page.waitForSelector("a.ui-commandlink > img[title='Histórico Escolar']");
 
-    await extraiHistoricoDaPagina(data);
-
-    // TODO: pegar pasta de downloads do config
-    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
-
-    const [botaoBaixarHistoricoConclusao] = await page.$x("//a[img[contains(@title, 'Histórico Escolar de Conclusão')]]");
-    
-    if (botaoBaixarHistoricoConclusao) {
-        console.log('Botao botaoBaixarHistoricoConclusao!');
-        await botaoBaixarHistoricoConclusao.click()
-    }
-
-    // TODO: aguardar pelo arquivo ter sido baixado
-    await page.waitFor(5000);
-
-    const [botaoBaixarHistorico] = await page.$x("//a[img[contains(@title, 'Histórico Escolar')]]");
-    
-    if (botaoBaixarHistorico) {
-        console.log('Botao botaoBaixarHistorico!');
-        await botaoBaixarHistorico.click()
-    }
-
-    // TODO: aguardar pelo arquivo ter sido baixado
-    await page.waitFor(15000);
-
     console.log('Pronto');
 }
 
 async function run(sga) {
     const page = await acessaPagina(sga);
-    await escolheBuscaPorMatricula(page);
+    const matricula = '1411100031';
+
+    await escolheBuscaPorMatricula(page, matricula);
+
+    var historico = await extraiHistoricoDaPagina(page);
+    var infos = await obtemInfosTextuaisHistorico(page);
+
+    await baixaHistoricoConclusao(page);
+
+    console.log(historico);
+    console.log(infos);
 }
 
 module.exports = {
-    run,
-    acessaPagina
+    run
 }
