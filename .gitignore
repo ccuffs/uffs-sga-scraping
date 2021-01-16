@@ -270,3 +270,4 @@ cordova/resources
 electron-build
 electron/www
 typings
+/config.json
