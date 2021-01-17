@@ -13,30 +13,21 @@ async function escolheBuscaPorNome(page, nome) {
     const [label] = await page.$x("//label[contains(., 'Nome')]");
     
     if (label) {
-        console.log('Click!');
         await label.click();
     } else {
         console.error('Algum problema');
     }
 
-    console.log('esperando botao');
     await page.waitForSelector("input[alt='Nome']");
-    console.log('antes botao');
-    
     await page.$eval("input[alt='Nome']", (el, value) => el.value = value, nome);
-
-    console.log('esperando botao');
     await page.waitForSelector("a.ui-commandlink > img");
-    console.log('antes botao');
 
     const [botaoBuscar] = await page.$x("//a[img[contains(@title, 'Buscar')]]");
     
     if (botaoBuscar) {
-        console.log('Botao buscar!');
         await botaoBuscar.click()
     }
 
-    console.log('esperando resultado');
     await page.waitForSelector("a.ui-commandlink > img[title='Selecionar Acadêmico']");
 }
 
@@ -54,14 +45,15 @@ async function coletaNomesInformados(page) {
             if (nome) aluno.nome = nome.childNodes[0].innerHTML;
             if (situacao) aluno.situacao = situacao.childNodes[0].innerHTML;
 
+            if(!aluno.matricula) {
+                return;
+            }
+
             rows.push(aluno);
         });
 
         return rows;
     });
-
-    console.log('colhendo dados');
-    console.log(rows);
 
     return rows;
 }

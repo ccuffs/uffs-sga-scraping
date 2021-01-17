@@ -14,7 +14,7 @@ function help() {
     console.log('');
     console.log('Options:');
     console.log('  --config=<str>          Caminho para arquivo config.json (default ./config.json).');
-    console.log('  --saida=<str>           Diretório para saída de arquivos resultado (default .).');
+    console.log('  --saida=<str>           Diretório para saída de arquivos resultado (default ./data/downloads).');
     console.log('  --usuario=<str>         idUFFS do usuário que fará o acesso aos dado no SGA.');
     console.log('                          Por default esse valor é obtido do arquivo de config.');
     console.log('  --senha=<str>           Senha do usuário que fará o acesso aos dado no SGA.');
@@ -22,12 +22,22 @@ function help() {
     console.log('  --alunos, -a            Cria uma lista com todos os alunos do curso.');
     console.log('  --conclusoes, -c        Obtem o percentual de integralização do curso de todos os alunos.');
     console.log('  --matricula=<int>       Matrícula de um aluno a ser analisado. Necessário informar');
-    console.log('                          se usar --historico, --historico-conclusao.');
+    console.log('                          se usar --historico, --historico-pdf, --conclusao-pdf.');
     console.log('  --historico             Obtem o histórico de um aluno via matrícula.');
+    console.log('  --historico-pdf         Obtem o histórico em PDF de um aluno via matrícula.');
+    console.log('  --conclusao-pdf         Obtem o histórico em PDF de integralização um aluno via matrícula.');
     console.log('  --print, -p             Imprime resultados textuais ao invés de salvar em arquivo json');
     console.log('                          no diretório de saída.');
     console.log('  --debug, -d             Roda em modo visual, sem ser headless (ignora config).');
     console.log('  --help, -h              Mostra essa ajuda.');
+}
+
+function output(result, argv) {
+    const text = JSON.stringify(result);
+
+    if(argv && (argv.p || argv.print)) {
+        console.log(text);
+    }
 }
 
 async function run(argv) {
@@ -62,28 +72,35 @@ async function run(argv) {
     }
 
     const matricula = argv.matricula ? argv.matricula : null;
-    const exigeMatricula = argv.historico;
+    const exigeMatricula = argv.historico ||
+                           argv['historico-pdf'] ||
+                           argv['conclusao-pdf'];
 
     if(exigeMatricula && !matricula) {
         throw 'Configuração de opções escolhida exige uso de --matricula.';
     }
 
-    const imprimir = argv.p || argv.print;
     const instance = await sga.create(config);
     
     if(argv.alunos || argv.a) {
         const alunos = await listaAlunos.run(instance);
-        if(imprimir) console.log(alunos);
+        output(alunos, argv);
     }
 
     if(argv.conclusoes || argv.c) {
         const integralizacoes = await percentualIntegralizacao.run(instance);
-        if(imprimir) console.log(integralizacoes);
+        output(integralizacoes, argv);
     }
 
     if(argv.historico) {
-        const historico = await historicoEscolar.run(instance);
-        if(imprimir) console.log(historico);
+        const optHistorico = {
+            matricula: matricula,
+            pdf: argv['historico-pdf'] || false,
+            conlusaoPdf: argv['conclusao-pdf'] || false
+        }
+        
+        const dados = await historicoEscolar.run(instance, optHistorico);
+        output(dados, argv);
     }
 
     sga.destroy();

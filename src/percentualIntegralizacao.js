@@ -13,17 +13,13 @@ async function clicaBuscar(page) {
     const [button] = await page.$x("//a[img[contains(@title, 'Buscar')]]");
     
     if (button) {
-        console.log('Click!');
         Promise.all([
             await button.click(),
             await page.waitForNavigation({ waitUntil: 'domcontentloaded' })
         ]);
     }
 
-    console.log('esperando botao');
     await page.waitForSelector("a.ui-commandlink > img");
-    console.log('antes botao');
-
     await page.waitFor(2000);
 }
 
@@ -34,7 +30,6 @@ async function baixaPlanilha(page) {
     const [botaoGerarPlanilha] = await page.$x("//a[img[contains(@title, 'Gerar')]]");
     
     if (botaoGerarPlanilha) {
-        console.log('Botao planilha!');
         await botaoGerarPlanilha.click()
     }
 
@@ -43,27 +38,19 @@ async function baixaPlanilha(page) {
 }
 
 async function extraiTabelaDaPagina(page) {
-    console.log('extraiTabelaDaPagina');
-
     return await page.evaluate(() => {
         var rows = [];
         var columnNames = [];
 
         // Obtem a tabela de conteudo
         document.querySelectorAll('table[role="grid"]').forEach(function(table) {
-            console.log('header');
-
             // Coleta o nome das colunas da tabela
             table.querySelectorAll('thead tr[role="row"] th span').forEach(function(headerCell, idx) {
                 if(!headerCell.innerText) {
                     return;
                 }
-
-                console.log(headerCell.innerText);
                 columnNames.push(headerCell.innerText);
             });
-
-            console.log('rows');
 
             // Itera em cada uma das linhas da tabela
             table.querySelectorAll('tbody tr[role="row"]').forEach(function(row, idx) {
@@ -85,7 +72,6 @@ async function extraiTabelaDaPagina(page) {
             }); 
         }); 
 
-        console.log(rows);
         return rows;
     });
 }
@@ -101,8 +87,7 @@ async function run(sga, baixarPlanilha = false) {
         await baixaPlanilha(page);
     }
 
-    console.log(integralizacoes);
-    await page.waitFor(5000);
+    return integralizacoes;
 }
 
 module.exports = {

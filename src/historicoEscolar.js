@@ -29,15 +29,11 @@ async function extraiHistoricoDaPagina(page) {
 
             // Obtem a tabela de conteudo dentro da tab
             el.querySelectorAll('table[role="grid"]').forEach(function(table) {
-                console.log('header');
-
                 // Coleta o nome das colunas da tabela
                 table.querySelectorAll('th span').forEach(function(headerCell, idx) {
                     console.log(headerCell.innerText);                
                     columnNames.push(headerCell.innerText);
                 });
-
-                console.log('rows');
 
                 // Itera em cada uma das linhas da tabela na tab corrente
                 table.querySelectorAll('tr[role="row"]').forEach(function(row, idx) {
@@ -65,9 +61,6 @@ async function extraiHistoricoDaPagina(page) {
         return tabs;
     });
 
-    console.log('colhendo dados');
-    console.log(tabs);
-
     return tabs;
 }
 
@@ -82,8 +75,6 @@ async function obtemInfosTextuaisHistorico(page) {
                 values: []
             };
 
-            console.log(name);            
-
             bloco.querySelectorAll('td').forEach(function(info) {
                 if(!info.innerText) {
                     return;
@@ -94,95 +85,85 @@ async function obtemInfosTextuaisHistorico(page) {
             blocos.push(infos);
         });
 
-        console.log(blocos);
-
         return blocos;
     });
 }
 
-async function baixaHistoricoConclusao(page) {
-    // TODO: pegar pasta de downloads do config
-    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
-
-    const [botaoBaixarHistoricoConclusao] = await page.$x("//a[img[contains(@title, 'Histórico Escolar de Conclusão')]]");
-    
-    if (botaoBaixarHistoricoConclusao) {
-        console.log('Botao botaoBaixarHistoricoConclusao!');
-        await botaoBaixarHistoricoConclusao.click()
-    }
-
-    // TODO: aguardar pelo arquivo ter sido baixado
-    await page.waitFor(5000);
-
+async function baixaHistoricoPdf(page) {
     const [botaoBaixarHistorico] = await page.$x("//a[img[contains(@title, 'Histórico Escolar')]]");
     
     if (botaoBaixarHistorico) {
-        console.log('Botao botaoBaixarHistorico!');
         await botaoBaixarHistorico.click()
     }
 
     // TODO: aguardar pelo arquivo ter sido baixado
     await page.waitFor(15000);
+}
 
+async function baixaHistoricoConclusaoPdf(page) {
+    const [botaoBaixarHistoricoConclusao] = await page.$x("//a[img[contains(@title, 'Histórico Escolar de Conclusão')]]");
+    
+    if (botaoBaixarHistoricoConclusao) {
+        await botaoBaixarHistoricoConclusao.click()
+    }
+
+    // TODO: aguardar pelo arquivo ter sido baixado
+    await page.waitFor(5000);
 }
 
 async function escolheBuscaPorMatricula(page, matricula) {
     const [label] = await page.$x("//label[contains(., 'Matrícula')]");
     
     if (label) {
-        console.log('Click!');
         await label.click();
     } else {
         console.error('Algum problema');
     }
 
-    console.log('esperando botao');
     await page.waitForSelector("input[alt='Matrícula']");
-    console.log('antes botao');
-    
     await page.$eval("input[alt='Matrícula']", (el, value) => el.value = value, matricula);
-
-    console.log('esperando botao');
     await page.waitForSelector("a.ui-commandlink > img");
-    console.log('antes botao');
 
     const [botaoBuscar] = await page.$x("//a[img[contains(@title, 'Buscar')]]");
     
     if (botaoBuscar) {
-        console.log('Botao buscar!');
         await botaoBuscar.click()
     }
 
-    console.log('esperando academico');
     await page.waitForSelector("a.ui-commandlink > img[title='Selecionar Acadêmico']");
-    console.log('antes academico');
 
     const [botaoSelecionarAcademico] = await page.$x("//a[img[contains(@title, 'Selecionar Acadêmico')]]");
     
     if (botaoSelecionarAcademico) {
-        console.log('Botao selecionar academico!');
         await botaoSelecionarAcademico.click()
     }
 
-    console.log('esperando dados');
     await page.waitForSelector("a.ui-commandlink > img[title='Histórico Escolar']");
-
-    console.log('Pronto');
 }
 
-async function run(sga) {
+async function run(sga, opts) {
     const page = await acessaPagina(sga);
-    const matricula = '1411100031';
 
-    await escolheBuscaPorMatricula(page, matricula);
+    await escolheBuscaPorMatricula(page, opts.matricula);
 
     var historico = await extraiHistoricoDaPagina(page);
     var infos = await obtemInfosTextuaisHistorico(page);
 
-    await baixaHistoricoConclusao(page);
+    // TODO: pegar pasta de downloads do config
+    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
 
-    console.log(historico);
-    console.log(infos);
+    if(opts.pdf) {
+        await baixaHistoricoPdf(page);
+    }
+
+    if(opts.conclusaoPdf) {
+        await baixaHistoricoConclusaoPdf(page);
+    }
+
+    return {
+        historico: historico,
+        infos: infos
+    }
 }
 
 module.exports = {
