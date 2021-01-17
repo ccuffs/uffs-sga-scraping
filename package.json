@@ -10,6 +10,7 @@
   "author": "Fernando Bevilacqua",
   "license": "MIT",
   "dependencies": {
+    "minimist": "^1.2.5",
     "puppeteer": "^2.0.0"
   }
 }
