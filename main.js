@@ -26,8 +26,7 @@ function help() {
     console.log('  --historico             Obtem o histórico de um aluno via matrícula.');
     console.log('  --historico-pdf         Obtem o histórico em PDF de um aluno via matrícula.');
     console.log('  --conclusao-pdf         Obtem o histórico em PDF de integralização um aluno via matrícula.');
-    console.log('  --print, -p             Imprime resultados textuais ao invés de salvar em arquivo json');
-    console.log('                          no diretório de saída.');
+    console.log('  --save, -s              Salva resultados em arquivo json ao inves de imprimir.');
     console.log('  --debug, -d             Roda em modo visual, sem ser headless (ignora config).');
     console.log('  --help, -h              Mostra essa ajuda.');
 }
@@ -35,7 +34,7 @@ function help() {
 function output(result, argv) {
     const text = JSON.stringify(result);
 
-    if(argv && (argv.p || argv.print)) {
+    if(argv && !argv.s && !argv.save) {
         console.log(text);
     }
 }

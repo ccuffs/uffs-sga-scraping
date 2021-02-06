@@ -63,6 +63,8 @@ async function run(sga) {
     
     await escolheBuscaPorNome(page, '%%%');
     const alunos = await coletaNomesInformados(page);
+    
+    return alunos;
 }
 
 module.exports = {
