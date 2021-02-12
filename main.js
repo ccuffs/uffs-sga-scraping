@@ -4,6 +4,7 @@ const sga = require('./src/sga');
 const percentualIntegralizacao = require('./src/percentualIntegralizacao');
 const historicoEscolar = require('./src/historicoEscolar');
 const listaAlunos = require('./src/listaAlunos');
+const { exit } = require('process');
 
 function help() {
     console.log('UFFS SGA Scraper - v1.0.0');
@@ -60,15 +61,15 @@ async function run(argv) {
     }
 
     if(argv.d || argv.debug) config.headless = false;
-    if(argv.user) config.auth.user = argv.user;
-    if(argv.password) config.auth.password = argv.password;
+    if(argv.usuario) config.auth.user = argv.usuario;
+    if(argv.senha) config.auth.password = argv.senha;
 
     if(!config.auth.user) {
-        throw 'Nenhum usuário informado no config.json ou via --user.';
+        throw 'Nenhum usuário informado no config.json ou via --usuario.';
     }
 
     if(!config.auth.password) {
-        throw 'Nenhuma senha informada no config.json ou via --password.';
+        throw 'Nenhuma senha informada no config.json ou via --senha.';
     }
 
     const matricula = argv.matricula ? argv.matricula : null;
@@ -108,10 +109,16 @@ async function run(argv) {
 
 var argv = require('minimist')(process.argv.slice(2));
 
+process.on('unhandledRejection', (reason, p) => {
+    console.error(reason);
+    exit(99);
+});
+
 try {
     run(argv);
     return 0;
 
 } catch(error) {
     console.error(error);
+    exit(9);
 }
