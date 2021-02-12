@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const sga = require('./src/sga');
 const percentualIntegralizacao = require('./src/percentualIntegralizacao');
 const historicoEscolar = require('./src/historicoEscolar');
@@ -44,8 +45,8 @@ async function run(argv) {
         return help();
     }
 
-    var configPath = argv.config ? argv.config : './config.json';
-    
+    var configPath = argv.config ? argv.config : path.resolve(path.dirname(require.main.filename), 'config.json.example');
+
     if(!fs.existsSync(configPath)) {
         throw 'Erro ao carregar config: ' + configPath;
     }
