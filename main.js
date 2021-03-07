@@ -8,6 +8,7 @@ const { exit } = require('process');
 
 function help() {
     console.log('UFFS SGA Scraper - v1.0.0');
+    console.log('Cli para leitura de dados do portal do coordenador da UFFS.');
     console.log('');
     console.log('Uso:');
     console.log('  sgas [options]');
@@ -52,7 +53,8 @@ async function run(argv) {
         throw 'Erro ao carregar config: ' + configPath;
     }
 
-    var config = require(configPath);
+    var configContent = fs.readFileSync(configPath);
+    var config = JSON.parse(configContent);
 
     var outputPath = argv.output ? argv.output : '.';
     
