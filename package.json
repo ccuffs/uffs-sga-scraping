@@ -10,6 +10,8 @@
   "author": "Fernando Bevilacqua",
   "license": "MIT",
   "dependencies": {
+    "delay": "^5.0.0",
+    "fs-extra": "^9.1.0",
     "minimist": "^1.2.5",
     "puppeteer": "^2.0.0"
   }

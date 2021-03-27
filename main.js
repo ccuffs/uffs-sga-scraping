@@ -4,6 +4,7 @@ const sga = require('./src/sga');
 const percentualIntegralizacao = require('./src/percentualIntegralizacao');
 const historicoEscolar = require('./src/historicoEscolar');
 const listaAlunos = require('./src/listaAlunos');
+const utils = require('./src/utils');
 const { exit } = require('process');
 
 function help() {
@@ -56,10 +57,11 @@ async function run(argv) {
     var configContent = fs.readFileSync(configPath);
     var config = JSON.parse(configContent);
 
-    var outputPath = argv.output ? argv.output : '.';
+    var defaultDownloadDir = path.join(process.cwd(), 'data', 'downloads');
+    var downloadDir = argv.saida ? argv.saida : defaultDownloadDir;
     
-    if(!fs.existsSync(outputPath)) {
-        throw 'Não foi possível acessar diretório de saida: ' + outputPath;
+    if(!fs.existsSync(downloadDir)) {
+        throw `Diretório de download informado em --saida é inacessível: "${downloadDir}"`;
     }
 
     if(argv.d || argv.debug) config.headless = false;
@@ -95,11 +97,13 @@ async function run(argv) {
         output(integralizacoes, argv);
     }
 
-    if(argv.historico) {
+    const isHistorico = argv.historico || argv['historico-pdf'] || argv['conclusao-pdf'];
+    
+    if(isHistorico) {
         const optHistorico = {
             matricula: matricula,
             pdf: argv['historico-pdf'] || false,
-            conlusaoPdf: argv['conclusao-pdf'] || false
+            conclusaoPdf: argv['conclusao-pdf'] || false
         }
         
         const dados = await historicoEscolar.run(instance, optHistorico);

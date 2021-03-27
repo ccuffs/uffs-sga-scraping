@@ -1,4 +1,5 @@
 const path = require('path');
+const utils = require('./utils');
 
 async function acessaPagina(sga) {
     const page = await sga.newTab();
@@ -92,23 +93,33 @@ async function obtemInfosTextuaisHistorico(page) {
 async function baixaHistoricoPdf(page) {
     const [botaoBaixarHistorico] = await page.$x("//a[img[contains(@title, 'Histórico Escolar')]]");
     
+    const randomDownloadDir = await utils.createTempDir();
+    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: randomDownloadDir});
+
     if (botaoBaixarHistorico) {
-        await botaoBaixarHistorico.click()
+        await botaoBaixarHistorico.click();
     }
 
-    // TODO: aguardar pelo arquivo ter sido baixado
-    await page.waitFor(15000);
+    await utils.checkFileDownloadedIntoEmptyDir(randomDownloadDir, 20);
+
+    const pdfPath = utils.getFilePathInDir(randomDownloadDir, '.pdf');
+    return pdfPath;
 }
 
 async function baixaHistoricoConclusaoPdf(page) {
     const [botaoBaixarHistoricoConclusao] = await page.$x("//a[img[contains(@title, 'Histórico Escolar de Conclusão')]]");
     
+    const randomDownloadDir = await utils.createTempDir();
+    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: randomDownloadDir});
+
     if (botaoBaixarHistoricoConclusao) {
         await botaoBaixarHistoricoConclusao.click()
     }
-
-    // TODO: aguardar pelo arquivo ter sido baixado
-    await page.waitFor(5000);
+    
+    await utils.checkFileDownloadedIntoEmptyDir(randomDownloadDir, 20);
+    
+    const pdfPath = utils.getFilePathInDir(randomDownloadDir, '.pdf');    
+    return pdfPath;
 }
 
 async function escolheBuscaPorMatricula(page, matricula) {
@@ -148,21 +159,22 @@ async function run(sga, opts) {
 
     var historico = await extraiHistoricoDaPagina(page);
     var infos = await obtemInfosTextuaisHistorico(page);
-
-    // TODO: pegar pasta de downloads do config
-    await page._client.send('Page.setDownloadBehavior', {behavior: 'allow', downloadPath: path.join(process.cwd(), 'data', 'downloads')});
+    var historicoPdfPath = null;
+    var historicoConclusaoPdfPath = null;
 
     if(opts.pdf) {
-        await baixaHistoricoPdf(page);
+        historicoPdfPath = await baixaHistoricoPdf(page);
     }
 
     if(opts.conclusaoPdf) {
-        await baixaHistoricoConclusaoPdf(page);
+        historicoConclusaoPdfPath = await baixaHistoricoConclusaoPdf(page);
     }
 
     return {
         historico: historico,
-        infos: infos
+        infos: infos,
+        pdfPath: historicoPdfPath,
+        conclusaoPdfPath: historicoConclusaoPdfPath
     }
 }
 
