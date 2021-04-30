@@ -1,4 +1,5 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const sga = require('./src/sga');
 const percentualIntegralizacao = require('./src/percentualIntegralizacao');
@@ -57,8 +58,7 @@ async function run(argv) {
     var configContent = fs.readFileSync(configPath);
     var config = JSON.parse(configContent);
 
-    var defaultDownloadDir = path.join(process.cwd(), 'data', 'downloads');
-    var downloadDir = argv.saida ? argv.saida : defaultDownloadDir;
+    var downloadDir = argv.saida ? argv.saida : os.tmpdir();
     
     if(!fs.existsSync(downloadDir)) {
         throw `Diretório de download informado em --saida é inacessível: "${downloadDir}"`;
@@ -116,7 +116,7 @@ async function run(argv) {
 var argv = require('minimist')(process.argv.slice(2));
 
 process.on('unhandledRejection', (reason, p) => {
-    console.error(reason);
+    console.log(reason);
     exit(99);
 });
 
@@ -125,6 +125,6 @@ try {
     return 0;
 
 } catch(error) {
-    console.error(error);
+    console.log(error);
     exit(9);
 }
