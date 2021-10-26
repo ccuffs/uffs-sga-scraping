@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 
+const acompanhamentoMatriz = require('./acompanhamentoMatriz');
 const utils = require('../utils');
 
 async function login(browser, config) {
@@ -35,22 +36,22 @@ async function launch(config) {
     return browser;
 }
 
-async function newTab() {
-    var page = await sga.browser.newPage();
-    page.setDefaultTimeout(0);
-
-    return page;
-}
-
 async function run(config, argv) {
     var aluno = {
         browser: await launch(config),
         config: config,
-        newTab: newTab
+        newTab: async function() {
+            var page = await this.browser.newPage();
+            page.setDefaultTimeout(0);
+        
+            return page;
+        }
     }
 
-    process(aluno, argv);
+    const data = await process(aluno, argv);
     destroy(aluno);
+
+    return data;
 }
 
 async function destroy(aluno) {
@@ -58,7 +59,13 @@ async function destroy(aluno) {
 }
 
 async function process(instance, argv) {
-    console.log('aluno');
+    var dados = {};
+
+    if (argv['acompanhamento-matriz']) {
+        dados.acompanhamentoMatriz = await acompanhamentoMatriz.run(instance, argv);
+    }
+
+    return dados;
 }
 
 module.exports = {

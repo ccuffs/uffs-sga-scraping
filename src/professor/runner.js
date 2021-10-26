@@ -37,22 +37,24 @@ async function launch(config) {
     return browser;
 }
 
-async function newTab() {
-    var page = await sga.browser.newPage();
-    page.setDefaultTimeout(0);
 
-    return page;
-}
 
 async function run(config, argv) {
     var sga = {
         browser: await launch(config),
         config: config,
-        newTab: newTab
+        newTab: async function() {
+            var page = await this.browser.newPage();
+            page.setDefaultTimeout(0);
+        
+            return page;
+        }
     }
 
-    process(sga, argv);
+    const data = await process(sga, argv);
     destroy(sga);
+
+    return data;
 }
 
 async function destroy(sga) {
@@ -60,6 +62,7 @@ async function destroy(sga) {
 }
 
 async function process(instance, argv) {
+    var data = {};
     const matricula = argv.matricula ? argv.matricula : null;
     const exigeMatricula = argv.historico ||
                            argv['historico-pdf'] ||
@@ -72,11 +75,13 @@ async function process(instance, argv) {
     if(argv.alunos || argv.a) {
         const alunos = await listaAlunos.run(instance);
         utils.output(alunos, argv);
+        data.alunos = alunos;
     }
 
     if(argv.conclusoes || argv.c) {
         const integralizacoes = await percentualIntegralizacao.run(instance);
         utils.output(integralizacoes, argv);
+        data.integralizacoes = integralizacoes;
     }
 
     const isHistorico = argv.historico || argv['historico-pdf'] || argv['conclusao-pdf'];
@@ -90,7 +95,10 @@ async function process(instance, argv) {
         
         const dados = await historicoEscolar.run(instance, optHistorico);
         utils.output(dados, argv);
+        data.historico = dados;
     }
+
+    return data;
 }
 
 module.exports = {

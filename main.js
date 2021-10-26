@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const utils = require('./src/utils');
 const { exit } = require('process');
 
 const runners = {
@@ -94,7 +95,10 @@ async function run(argv) {
         if (!requestedRunners.includes(id)) {
             continue;
         }
-        runners[id].run(config, argv);
+        
+        const dados = await runners[id].run(config, argv);
+
+        utils.output(dados, argv);
     }
 }
 
