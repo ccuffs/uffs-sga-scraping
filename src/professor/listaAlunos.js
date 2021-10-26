@@ -1,5 +1,3 @@
-const path = require('path');
-
 async function acessaPagina(sga) {
     const page = await sga.newTab();
     

@@ -95,8 +95,17 @@ function getFilePathInDir(dirPath, extension) {
     return null;
 }
 
+function output(result, argv) {
+    const text = JSON.stringify(result);
+
+    if(argv && !argv.s && !argv.save) {
+        console.log(text);
+    }
+}
+
 module.exports = {
     checkFileDownloadedIntoEmptyDir,
     createTempDir,
-    getFilePathInDir
+    getFilePathInDir,
+    output
 }

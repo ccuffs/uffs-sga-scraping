@@ -1,5 +1,4 @@
-const path = require('path');
-const utils = require('./utils');
+const utils = require('../utils');
 
 async function acessaPagina(sga) {
     const page = await sga.newTab();

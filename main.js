@@ -1,11 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const sga = require('./src/sga');
-const percentualIntegralizacao = require('./src/percentualIntegralizacao');
-const historicoEscolar = require('./src/historicoEscolar');
-const listaAlunos = require('./src/listaAlunos');
-const utils = require('./src/utils');
+const professor = require('./src/professor/runner');
 const { exit } = require('process');
 
 function help() {
@@ -34,14 +30,6 @@ function help() {
     console.log('  --save, -s              Salva resultados em arquivo json ao inves de imprimir.');
     console.log('  --debug, -d             Roda em modo visual, sem ser headless (ignora config).');
     console.log('  --help, -h              Mostra essa ajuda.');
-}
-
-function output(result, argv) {
-    const text = JSON.stringify(result);
-
-    if(argv && !argv.s && !argv.save) {
-        console.log(text);
-    }
 }
 
 async function run(argv) {
@@ -76,47 +64,19 @@ async function run(argv) {
         throw 'Nenhuma senha informada no config.json ou via --senha.';
     }
 
-    const matricula = argv.matricula ? argv.matricula : null;
-    const exigeMatricula = argv.historico ||
-                           argv['historico-pdf'] ||
-                           argv['conclusao-pdf'];
-
-    if(exigeMatricula && !matricula) {
-        throw 'Configuração de opções escolhida exige uso de --matricula.';
+    const runners = {
+        professor: professor,
     }
-
-    const instance = await sga.create(config);
     
-    if(argv.alunos || argv.a) {
-        const alunos = await listaAlunos.run(instance);
-        output(alunos, argv);
+    for (const id in runners) {
+        runners[id].run(config, argv);
     }
-
-    if(argv.conclusoes || argv.c) {
-        const integralizacoes = await percentualIntegralizacao.run(instance);
-        output(integralizacoes, argv);
-    }
-
-    const isHistorico = argv.historico || argv['historico-pdf'] || argv['conclusao-pdf'];
-    
-    if(isHistorico) {
-        const optHistorico = {
-            matricula: matricula,
-            pdf: argv['historico-pdf'] || false,
-            conclusaoPdf: argv['conclusao-pdf'] || false
-        }
-        
-        const dados = await historicoEscolar.run(instance, optHistorico);
-        output(dados, argv);
-    }
-
-    sga.destroy();
 }
 
 var argv = require('minimist')(process.argv.slice(2));
 
 process.on('unhandledRejection', (reason, p) => {
-    console.log(reason);
+    console.error(reason);
     exit(99);
 });
 
