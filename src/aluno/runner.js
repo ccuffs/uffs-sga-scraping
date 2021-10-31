@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
 
 const acompanhamentoMatriz = require('./acompanhamentoMatriz');
-const utils = require('../utils');
+const emissaoDocumentos = require('./emissaoDocumentos');
 
 async function login(browser, config) {
     const page = await browser.newPage();
@@ -64,6 +64,8 @@ async function process(instance, argv) {
     if (argv['acompanhamento-matriz']) {
         dados.acompanhamentoMatriz = await acompanhamentoMatriz.run(instance, argv);
     }
+
+    dados.emissaoDocumentos = await emissaoDocumentos.run(instance, argv);
 
     return dados;
 }

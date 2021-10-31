@@ -46,7 +46,7 @@ async function checkFileDownloadedIntoEmptyDir(dirPath, maxWaitTimeSec, delayMs,
                 files = fs.readdirSync(dirPath);
                 await delay(delayMs);
             } catch (err) {
-                return resolve('Problem reading directory: ' + err);
+                return reject('Problem reading directory: ' + err);
             }
         } while (files.length == 0 && maxReadsDir++ <= maxTries);
 
@@ -60,7 +60,7 @@ async function checkFileDownloadedIntoEmptyDir(dirPath, maxWaitTimeSec, delayMs,
                 await checkFileDownloadedIntoEmptyDir(dirPath, maxWaitTimeSec, delayMs, isDownloading, maxTries);
             }
         }
-        return resolve('Max tries reached');
+        return reject('Max tries reached');
     });
 };
 

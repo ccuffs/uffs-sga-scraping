@@ -44,6 +44,8 @@ function help() {
     console.log('');        
     console.log('Options (runner aluno):');
     console.log('  --acompanhamento-matriz   Cria uma lista com todos os alunos do curso.');
+    console.log('  --situacao-pdf            Obtem o atestado de situação de matrícula em PDF.');
+    console.log('  --conclusao-pdf           Obtem o histórico de conclusão em PDF.');
     console.log('');      
     console.log('Exemplos:');
     console.log('  node main.js professor --config=config.json --alunos');
