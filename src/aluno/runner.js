@@ -61,7 +61,7 @@ async function destroy(aluno) {
 async function process(instance, argv) {
     var dados = {};
 
-    if (argv['acompanhamento-matriz']) {
+    if (argv['historico']) {
         dados.acompanhamentoMatriz = await acompanhamentoMatriz.run(instance, argv);
     }
 

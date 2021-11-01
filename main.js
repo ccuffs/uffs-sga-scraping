@@ -43,7 +43,7 @@ function help() {
     console.log('  --conclusao-pdf           Obtem o histórico em PDF de integralização um aluno via matrícula.');
     console.log('');        
     console.log('Options (runner aluno):');
-    console.log('  --acompanhamento-matriz   Cria uma lista com todos os alunos do curso.');
+    console.log('  --historico               Obtem o histórico do aluno.');
     console.log('  --situacao-pdf            Obtem o atestado de situação de matrícula em PDF.');
     console.log('  --conclusao-pdf           Obtem o histórico de conclusão em PDF.');
     console.log('');      
