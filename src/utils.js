@@ -3,35 +3,6 @@ const path = require('path');
 const os = require('os');
 const delay = require('delay');
 
-// https://stackoverflow.com/a/66023248
-async function checkFileDownloadedIntoDir(dirPath, maxTries, delay) {
-    var delayMs = delay || 10000;
-
-    return new Promise(async (resolve, reject) => {
-        let noOfFile;
-        try {
-            noOfFile = fs.readdirSync(dirPath);
-        } catch (err) {
-            return resolve('null');
-        }
-        for (let i in noOfFile) {
-            if (!noOfFile[i].includes('.crdownload')) {
-                continue;
-            }
-            console.log('delay', delayMs);
-            await delay(delayMs);
-            if (maxTries <= 0) {
-                // TODO: add fs.unlink(dirPath + '/' + noOfFile[i], (err) => {}); to remove file?
-                return resolve('Success');
-            } else {
-                maxTries--;
-                await checkFileDownloadedIntoDir(dirPath, maxTries, delayMs);
-            }
-        }
-        return resolve('Success');
-    });
-};
-
 // Adapted from: https://stackoverflow.com/a/66023248
 async function checkFileDownloadedIntoEmptyDir(dirPath, maxWaitTimeSec, delayMs, waiting, maxTries) {
     var delayMs = delayMs || 100;
@@ -87,7 +58,7 @@ function getFilePathInDir(dirPath, extension) {
     let files = fs.readdirSync(dirPath);
 
     for (let i in files) {
-        if (files[i].includes(extension)) {
+        if (files[i].endsWith(extension)) {
             return path.join(dirPath, files[i]);
         }
     }

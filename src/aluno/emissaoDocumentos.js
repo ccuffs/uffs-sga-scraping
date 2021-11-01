@@ -38,11 +38,11 @@ async function clickBotaoDownload(page, xpath) {
 async function run(aluno, argv) {
     var situacaoMatriculaPdfPath = null;
     var historicoConclusaoPdfPath = null;
-console.log('111');
+
     const page = await acessaPagina(aluno);
-console.log('222');
+
     await escolheEmissaoDocumentos(page);
-console.log('333');
+
     if (argv['situacao-pdf']) {
         situacaoMatriculaPdfPath = await baixaSituacaoMatriculaPdf(page);
     }
@@ -50,7 +50,7 @@ console.log('333');
     if (argv['conclusao-pdf']) {
         historicoConclusaoPdfPath = await baixaHistoricoConclusaoPdf(page);
     }
-console.log('444');
+
     return {
         situacaoMatriculaPdfPath: situacaoMatriculaPdfPath,
         historicoConclusaoPdfPath: historicoConclusaoPdfPath
